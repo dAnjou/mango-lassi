@@ -139,7 +139,7 @@ void lassi_tray_show_notification(LassiTrayInfo *i, char *summary, char *body, L
 
     NotifyNotification *n;
 
-    n = notify_notification_new_with_status_icon(summary, body, icon_name[icon], i->status_icon);
+    n = notify_notification_new(summary, body, i->status_icon);
     notify_notification_set_timeout(n, 10000);
     notify_notification_set_urgency(n, NOTIFY_URGENCY_LOW);
     notify_notification_set_category(n, "network");
