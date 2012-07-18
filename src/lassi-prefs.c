@@ -26,17 +26,27 @@ enum {
 static void update_sensitive(LassiPrefsInfo *i);
 
 static void on_add_button_clicked(GtkButton *widget, LassiPrefsInfo *i) {
-    GtkWidget *d;
+    GtkWidget *d = gtk_message_dialog_new(
+        GTK_WINDOW(i->dialog),
+        GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+        GTK_MESSAGE_QUESTION,
+        GTK_BUTTONS_OK,
+        NULL);
+    gtk_message_dialog_set_markup(GTK_MESSAGE_DIALOG(d), "Please enter the other PC's address (<b>IP_ADDRESS:PORT</b>)");
+    GtkWidget *entry = gtk_entry_new();
+    GtkWidget *vbox = gtk_message_dialog_get_message_area(GTK_MESSAGE_DIALOG(d));
+    gtk_box_pack_end(GTK_BOX(vbox), entry, TRUE, TRUE, 0);
+    gtk_widget_show_all(GTK_DIALOG(d));
 
-    d = aui_service_dialog_new("Choose Desktop to add", GTK_WINDOW(i->dialog), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL, GTK_STOCK_ADD, GTK_RESPONSE_ACCEPT, NULL);
-    aui_service_dialog_set_browse_service_types(AUI_SERVICE_DIALOG(d), LASSI_SERVICE_TYPE, NULL);
-
-    if (gtk_dialog_run(GTK_DIALOG(d)) == GTK_RESPONSE_ACCEPT) {
-        char a[AVAHI_ADDRESS_STR_MAX], *t;
-
-        avahi_address_snprint(a, sizeof(a), aui_service_dialog_get_address(AUI_SERVICE_DIALOG(d)));
-        t = g_strdup_printf("tcp:port=%u,host=%s", aui_service_dialog_get_port(AUI_SERVICE_DIALOG(d)), a);
+    if (gtk_dialog_run(GTK_DIALOG(d)) == GTK_RESPONSE_OK) {
+        char *t;
+        gchar *input = gtk_entry_get_text(GTK_ENTRY(entry));
+        //XXX: this is ugly
+        gchar **address = g_strsplit(input, ":", 2);
+        t = g_strdup_printf("tcp:port=%s,host=%s", address[1], address[0]);
         lassi_server_connect(i->server,  t);
+
+        g_strfreev(address);
         g_free(t);
     }
 
